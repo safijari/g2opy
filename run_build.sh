@@ -14,6 +14,7 @@ do
     echo $folder
     rm /usr/bin/python
     ln -s $folder/bin/python /usr/bin/python
+    $folder/bin/pip install pybind11-cmake
     $folder/bin/python setup.py bdist_wheel
 done
 
@@ -22,5 +23,5 @@ cd dist
 ln -s /opt/python/cp37-cp37m/bin/python /usr/bin/python
 for file in ./*
 do
-    /opt/python/cp37-cp37m/bin/auditwheel repair --plat manylinux2010_x86_64 $file
+    /opt/python/cp37-cp37m/bin/auditwheel -v repair --plat manylinux2010_x86_64 $file
 done

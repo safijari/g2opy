@@ -62,9 +62,9 @@ IF(WIN32)
 ELSE(WIN32)
   SET(g2o_LIBRARY_OUTPUT_DIRECTORY ${g2o_SOURCE_DIR}/lib CACHE PATH "Target for the libraries")
 ENDIF(WIN32)
-SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${g2o_LIBRARY_OUTPUT_DIRECTORY})
-SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${g2o_LIBRARY_OUTPUT_DIRECTORY})
-SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${g2o_RUNTIME_OUTPUT_DIRECTORY})
+# SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${g2o_LIBRARY_OUTPUT_DIRECTORY})
+# SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${g2o_LIBRARY_OUTPUT_DIRECTORY})
+# SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${g2o_RUNTIME_OUTPUT_DIRECTORY})
 
 # Set search directory for looking for our custom CMake scripts to
 # look for SuiteSparse, QGLViewer, and Eigen3.
@@ -292,7 +292,47 @@ INSTALL(FILES ${PROJECT_BINARY_DIR}/g2o/config.h DESTINATION ${CMAKE_INSTALL_PRE
 
 # Include the subdirectories
 ADD_SUBDIRECTORY(EXTERNAL)
+
+execute_process(COMMAND python -c
+  "import pybind11_cmake; print(pybind11_cmake.__path__[0])"
+  OUTPUT_VARIABLE pybind11_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+find_package(pybind11 REQUIRED)
+
 ADD_SUBDIRECTORY(g2o)
 
 ADD_SUBDIRECTORY(contrib)   # added for python binding
-ADD_SUBDIRECTORY(python)   # added for python binding
+# ADD_SUBDIRECTORY(python)   # added for python binding
+
+include_directories(${PROJECT_SOURCE_DIR})
+
+include_directories(${EIGEN3_INCLUDE_DIR})
+include_directories(${CHOLMOD_INCLUDE_DIR})
+include_directories(${CSPARSE_INCLUDE_DIR})
+
+# pybind11 (version 2.2.1)
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/EXTERNAL/pybind11/tools)
+include_directories(${PROJECT_SOURCE_DIR}/EXTERNAL/pybind11/include)
+include(pybind11Tools)
+
+
+pybind11_add_module(g2o python/g2o.cpp)
+target_link_libraries(g2o PRIVATE 
+  core
+  solver_cholmod
+  solver_csparse
+  solver_eigen
+  solver_dense
+  solver_pcg
+  solver_slam2d_linear
+  solver_structure_only
+  types_data
+  types_icp
+  types_sba
+  types_sclam2d
+  types_sim3
+  types_slam2d
+  types_slam2d_addons
+  types_slam3d
+  types_slam3d_addons
+  contrib
+  )
